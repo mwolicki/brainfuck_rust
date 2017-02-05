@@ -25,9 +25,8 @@ fn read() -> u8 {
     return buffer[0];
 }
 
-fn print(ch:u8){
-    let buf = &[ch];
-    let _ = io::stdout().write(buf);
+fn print(ch:u8) {
+    io::stdout().write(&[ch]).ok();
 }
 
 fn eval_while(s: State, ops: Vec<Op>) -> State {
@@ -40,7 +39,7 @@ fn eval_while(s: State, ops: Vec<Op>) -> State {
 
 fn eval_vec(s: State, ops: Vec<Op>) -> State {
     let mut state = s;
-        for op in ops.iter() {
+        for op in &ops {
             let op_code = op.clone();
             state = eval (state, op_code);
         }
@@ -81,7 +80,7 @@ fn get_ast (code:&str) -> (Vec<Op>, usize) {
             "," => Some(Op::Read),
             "[" =>{
                 let (ops, size) = get_ast(code[(i+1..code.len())].as_ref());
-                i=i+size+1;
+                i+=size+1;
                 match code[(i..i+1)].as_ref() {
                     "]" => Some(Op::While{ops : ops}),
                     x => panic!("while loop needs to end with ']' but was with '{:?}'", x)}}
@@ -91,7 +90,7 @@ fn get_ast (code:&str) -> (Vec<Op>, usize) {
         if let Some(op) = op {
             ops.push (op);
         }
-        i=i+1;        
+        i+=1;        
     }
     return (ops, i)
 }
@@ -141,6 +140,7 @@ Pointer :   ^
 +++.------.--------.    Cell #3 for 'rl' and 'd'
 >>+.                    Add 1 to Cell #5 gives us an exclamation point
 >++.                    And finally a newline from Cell #6";
+
     let init_state = State { curr_ptr : 0, data : HashMap::new() };
     let (ast, _) = get_ast(hello_word);
     eval_vec(init_state, ast);
