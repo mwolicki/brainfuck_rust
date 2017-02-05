@@ -30,7 +30,6 @@ fn print(ch:u8){
     let _ = io::stdout().write(buf);
 }
 
-
 fn eval_while(s: State, ops: Vec<Op>) -> State {
     let mut state = s;
     while *(state.data.entry(state.curr_ptr).or_insert(0)) != 0 {
@@ -51,7 +50,6 @@ fn eval_vec(s: State, ops: Vec<Op>) -> State {
 fn eval (mut s:State, op:Op) -> State {
         {
             let state = s.clone();
-            
             let val = s.data.entry(s.curr_ptr).or_insert(0);
             let wrapped_val = Wrapping(*val);
             let wrapped_one = Wrapping(1);
@@ -63,9 +61,7 @@ fn eval (mut s:State, op:Op) -> State {
                 Op::DecVal => *val = (wrapped_val - wrapped_one).0,
                 Op::Print => print(*val),
                 Op::Read => *val = read(),
-                Op::While { ops } => { 
-                    return eval_while(state, ops); 
-                }
+                Op::While { ops } => { return eval_while(state, ops); }
             }
         }
         s
@@ -88,7 +84,7 @@ fn get_ast (code:&str) -> (Vec<Op>, usize) {
                 i=i+size+1;
                 match code[(i..i+1)].as_ref() {
                     "]" => Some(Op::While{ops : ops}),
-                    x => panic!("blah {:?}", x)}}
+                    x => panic!("while loop needs to end with ']' but was with '{:?}'", x)}}
             "]" => { return (ops, i) } 
             _ => None,
         };
@@ -100,13 +96,9 @@ fn get_ast (code:&str) -> (Vec<Op>, usize) {
     return (ops, i)
 }
 
-
-
 fn main() {
-    let x = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
-    //println!(">>{:?}", get_ast(x));
-
+    let hello_word = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
     let init_state = State { curr_ptr : 0, data : HashMap::new() };
-    let (ast, _) = get_ast(x);
+    let (ast, _) = get_ast(hello_word);
     eval_vec(init_state, ast);
 }
