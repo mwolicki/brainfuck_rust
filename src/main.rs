@@ -29,17 +29,17 @@ fn print(ch:u8) {
     io::stdout().write(&[ch]).ok();
 }
 
-fn eval_while(s: State, ops: Vec<Op>) -> State {
+fn eval_while(s: State, ops: &Vec<Op>) -> State {
     let mut state = s;
     while *(state.data.entry(state.curr_ptr).or_insert(0)) != 0 {
-        state = eval_vec(state, ops.clone());
+        state = eval_vec(state, ops);
     }
     return state;
 }
 
-fn eval_vec(s: State, ops: Vec<Op>) -> State {
+fn eval_vec(s: State, ops: &Vec<Op>) -> State {
     let mut state = s;
-        for op in &ops {
+        for op in ops.iter() {
             let op_code = op.clone();
             state = eval (state, op_code);
         }
@@ -60,7 +60,7 @@ fn eval (mut s:State, op:Op) -> State {
                 Op::DecVal => *val = (wrapped_val - wrapped_one).0,
                 Op::Print => print(*val),
                 Op::Read => *val = read(),
-                Op::While { ops } => { return eval_while(state, ops); }
+                Op::While { ops } => { return eval_while(state, &ops); }
             }
         }
         s
@@ -143,5 +143,5 @@ Pointer :   ^
 
     let init_state = State { curr_ptr : 0, data : HashMap::new() };
     let (ast, _) = get_ast(hello_word);
-    eval_vec(init_state, ast);
+    eval_vec(init_state, &ast);
 }
