@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::io::{self, Read, Write};
 use std::num::Wrapping;
 
-#[derive(Debug,Clone)]
+#[derive(Debug)]
 enum Op {
     IncPointer,
     DecPointer,
@@ -40,13 +40,12 @@ fn eval_while(s: State, ops: &Vec<Op>) -> State {
 fn eval_vec(s: State, ops: &Vec<Op>) -> State {
     let mut state = s;
         for op in ops.iter() {
-            let op_code = op.clone();
-            state = eval (state, op_code);
+            state = eval (state, op);
         }
     return state;
 }
 
-fn eval (mut s:State, op:Op) -> State {
+fn eval (mut s:State, op:&Op) -> State {
         {
             let state = s.clone();
             let val = s.data.entry(s.curr_ptr).or_insert(0);
@@ -54,13 +53,13 @@ fn eval (mut s:State, op:Op) -> State {
             let wrapped_one = Wrapping(1);
             
             match op {
-                Op::IncPointer => s.curr_ptr += 1,
-                Op::DecPointer => s.curr_ptr -= 1,
-                Op::IncVal => *val = (wrapped_val + wrapped_one).0,
-                Op::DecVal => *val = (wrapped_val - wrapped_one).0,
-                Op::Print => print(*val),
-                Op::Read => *val = read(),
-                Op::While { ops } => { return eval_while(state, &ops); }
+                &Op::IncPointer => s.curr_ptr += 1,
+                &Op::DecPointer => s.curr_ptr -= 1,
+                &Op::IncVal => *val = (wrapped_val + wrapped_one).0,
+                &Op::DecVal => *val = (wrapped_val - wrapped_one).0,
+                &Op::Print => print(*val),
+                &Op::Read => *val = read(),
+                &Op::While { ref ops } => { return eval_while(state, &ops); }
             }
         }
         s
