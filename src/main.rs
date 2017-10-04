@@ -1,6 +1,4 @@
-use std::collections::HashMap;
 use std::io::{self, Read};
-use std::num::Wrapping;
 
 #[derive(Debug)]
 enum Op {
@@ -13,10 +11,9 @@ enum Op {
     While { ops: Vec<Op> },
 }
 
-#[derive(Debug)]
 struct State {
-    curr_ptr: i32,
-    data: HashMap<i32, u8>,
+    curr_ptr: usize,
+    data: [u8; 4092],
     output: String,
 }
 
@@ -27,7 +24,7 @@ fn read() -> u8 {
 }
 
 fn eval_while(state: &mut State, ops: &[Op]) {
-    while *(state.data.entry(state.curr_ptr).or_insert(0)) != 0 {
+    while state.data[state.curr_ptr] != 0 {
         eval_vec(state, ops);
     }
 }
@@ -45,18 +42,10 @@ fn eval(state: &mut State, op: &Op) {
         Op::While { ref ops } => {
             eval_while(state, ops);
         }
-        _ => {
-            let val = state.data.entry(state.curr_ptr).or_insert(0);
-            let wrapped_val = Wrapping(*val);
-            let wrapped_one = Wrapping(1);
-            match *op {
-                Op::IncVal => *val = (wrapped_val + wrapped_one).0,
-                Op::DecVal => *val = (wrapped_val - wrapped_one).0,
-                Op::Print => state.output.push(char::from(*val)),
-                Op::Read => *val = read(),
-                _ => panic!("impossible!"),
-            }
-        }
+        Op::IncVal => state.data[state.curr_ptr] += 1,
+        Op::DecVal => state.data[state.curr_ptr] -= 1,
+        Op::Print => state.output.push(char::from(state.data[state.curr_ptr])),
+        Op::Read => state.data[state.curr_ptr] = read(),
     }
 }
 
@@ -95,7 +84,7 @@ fn get_ast(code: &str) -> (Vec<Op>, usize) {
 fn run_brainfuck(code: &str) -> String {
     let mut state = State {
         curr_ptr: 0,
-        data: HashMap::new(),
+        data: [0; 4092],
         output: String::new(),
     };
     let (ast, _) = get_ast(code);
@@ -104,10 +93,11 @@ fn run_brainfuck(code: &str) -> String {
 }
 
 fn main() {
-    let result = run_brainfuck(
-        "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++.. +++.>++.<<+++++++++++++++.>.+++.------.--------.>+.",
+
+    println!(
+        "{}",
+        run_brainfuck(
+            "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++.. +++.>++.<<+++++++++++++++.>.+++.------.--------.>+.",
+        )
     );
-    println!("{}", result)
-
-
 }
